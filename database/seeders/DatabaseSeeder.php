@@ -9,14 +9,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // Master data dulu
             ExerciseSeeder::class,
             ComplaintSeeder::class,
             GoalSeeder::class,
-
-            // Knowledge base (pivot) — harus setelah master data
             ComplaintExerciseSeeder::class,
             GoalExerciseSeeder::class,
+            AdminSeeder::class,  // ← tambahkan
         ]);
     }
 }

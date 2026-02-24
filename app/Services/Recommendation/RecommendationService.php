@@ -198,15 +198,31 @@ class RecommendationService
      */
     public function getHistory(int $userProfileId): Collection
     {
-        return Recommendation::where('user_profile_id', $userProfileId)
+        $recommendations = Recommendation::where('user_profile_id', $userProfileId)
             ->with([
                 'details.exercise',
-                'details.scoreBreakdown',
                 'primaryComplaint',
                 'goal',
             ])
             ->orderByDesc('created_at')
             ->get();
+
+        // Inject breakdown untuk setiap recommendation
+        $recommendations->each(function (Recommendation $recommendation) {
+            $breakdowns = RecommendationScoreBreakdown::where(
+                'recommendation_id',
+                $recommendation->id
+            )->get()->keyBy('exercise_id');
+
+            $recommendation->details->each(function (RecommendationDetail $detail) use ($breakdowns) {
+                $detail->setRelation(
+                    'scoreBreakdown',
+                    $breakdowns->get($detail->exercise_id)
+                );
+            });
+        });
+
+        return $recommendations;
     }
 
     /**
@@ -214,12 +230,28 @@ class RecommendationService
      */
     public function getDetail(int $recommendationId): Recommendation
     {
-        return Recommendation::with([
+        // Load tanpa scoreBreakdown dulu
+        $recommendation = Recommendation::with([
             'details.exercise',
-            'details.scoreBreakdown',
             'primaryComplaint',
             'goal',
             'userProfile',
         ])->findOrFail($recommendationId);
+
+        // Load semua breakdowns sekaligus dalam 1 query
+        $breakdowns = RecommendationScoreBreakdown::where(
+            'recommendation_id',
+            $recommendation->id
+        )->get()->keyBy('exercise_id');
+
+        // Inject manual ke masing-masing detail
+        $recommendation->details->each(function (RecommendationDetail $detail) use ($breakdowns) {
+            $detail->setRelation(
+                'scoreBreakdown',
+                $breakdowns->get($detail->exercise_id)
+            );
+        });
+
+        return $recommendation;
     }
 }

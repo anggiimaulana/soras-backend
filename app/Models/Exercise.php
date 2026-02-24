@@ -56,4 +56,9 @@ class Exercise extends Model
             default             => 'Unknown',
         };
     }
+
+    public function recommendationDetails()
+    {
+        return $this->hasMany(\App\Models\RecommendationDetail::class);
+    }
 }
