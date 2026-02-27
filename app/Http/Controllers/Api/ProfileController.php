@@ -10,6 +10,8 @@ use App\Http\Resources\GoalResource;
 use App\Http\Resources\UserProfileResource;
 use App\Models\Complaint;
 use App\Models\Goal;
+use App\Services\Recommendation\AgeClassifier;
+use App\Services\Recommendation\BMICalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -40,7 +42,10 @@ class ProfileController extends Controller
     // GET /api/profile
     public function show(Request $request): JsonResponse
     {
-        $profile = $request->user()->profile;
+        /** @var \App\Models\User|null $user */
+        $user = $request->user();
+
+        $profile = $user?->profile;
 
         if (!$profile) {
             return response()->json([
@@ -59,14 +64,17 @@ class ProfileController extends Controller
     public function store(StoreProfileRequest $request): JsonResponse
     {
         // Cek apakah profil sudah ada
-        if ($request->user()->profile) {
+        /** @var \App\Models\User|null $user */
+        $user = $request->user();
+
+        if ($user?->profile) {
             return response()->json([
                 'success' => false,
                 'message' => 'Profil sudah ada. Gunakan PUT untuk mengupdate.',
             ], 422);
         }
 
-        $profile = $request->user()->profile()->create(
+        $profile = $user->profile()->create(
             $request->validated()
         );
 
@@ -78,23 +86,33 @@ class ProfileController extends Controller
     }
 
     // PUT /api/profile
-    public function update(UpdateProfileRequest $request): JsonResponse
+    public function update(UpdateProfileRequest $request)
     {
-        $profile = $request->user()->profile;
+        /** @var \App\Models\User|null $user */
+        $user = $request->user();
 
-        if (!$profile) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Profil belum dibuat.',
-            ], 404);
-        }
+        $profile = $user->profile;
 
-        $profile->update($request->validated());
+        $data = $request->validated();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Profil berhasil diupdate.',
-            'data'    => new UserProfileResource($profile),
+        // Hitung ulang BMI
+        $heightM = $data['height_cm'] / 100;
+        $bmi     = round($data['weight_kg'] / ($heightM * $heightM), 2);
+
+        // Hitung ulang age_category — pastikan ini dipanggil!
+        $ageCategory = app(AgeClassifier::class)->categorize($data['age']);
+        $bmiCategory = app(BMICalculator::class)->categorize($bmi);
+
+        $profile->update([
+            ...$data,
+            'bmi'          => $bmi,
+            'bmi_category' => $bmiCategory,
+            'age_category' => $ageCategory,  // ← pastikan ada
         ]);
+
+        return $this->successResponse(
+            new UserProfileResource($profile->fresh()),
+            'Profil berhasil diupdate.'
+        );
     }
 }

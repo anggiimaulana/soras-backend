@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ExerciseController;
 use App\Http\Controllers\Admin\ComplaintController;
 use App\Http\Controllers\Admin\GoalController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public ───────────────────────────────────────────────────
@@ -65,4 +66,8 @@ Route::middleware(['auth', 'admin'])
         // Goals matrix
         Route::get('goals',                 [GoalController::class, 'index'])->name('goals.index');
         Route::put('goals/{id}/score',      [GoalController::class, 'updateScore'])->name('goals.updateScore');
+
+        // Users (read-only)
+        Route::get('users',      [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('users/{id}', [AdminUserController::class, 'show'])->name('users.show');
     });
