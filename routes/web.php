@@ -17,6 +17,8 @@ Route::get('/', function () {
     return view('pages.landing');
 })->name('landing');
 
+Route::get('/app/docs', fn() => view('docs'))->name('docs');
+
 // ─── Auth ─────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('login',     [AuthController::class, 'showLogin'])->name('login');
