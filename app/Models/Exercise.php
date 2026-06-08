@@ -19,6 +19,13 @@ class Exercise extends Model
         'description',
     ];
 
+    protected $casts = [
+        'impact_level'       => 'integer',
+        'intensity_level'    => 'integer',
+        'duration_min'       => 'integer',
+        'frequency_per_week' => 'integer',
+    ];
+
     // Konstanta untuk readability
     const IMPACT_LOW    = 1;
     const IMPACT_MEDIUM = 2;
