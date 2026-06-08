@@ -39,7 +39,7 @@ class RecommendationController extends Controller
             'success' => true,
             'message' => 'Rekomendasi berhasil dibuat.',
             'data'    => new RecommendationResource($result),
-        ], 201);
+        ], 201, [], JSON_PRESERVE_ZERO_FRACTION);
     }
 
     // GET /api/recommendations/{id}
@@ -58,6 +58,6 @@ class RecommendationController extends Controller
         return response()->json([
             'success' => true,
             'data'    => new RecommendationResource($recommendation),
-        ]);
+        ], 200, [], JSON_PRESERVE_ZERO_FRACTION);
     }
 }

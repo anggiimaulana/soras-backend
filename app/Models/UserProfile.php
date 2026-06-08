@@ -20,6 +20,13 @@ class UserProfile extends Model
         'age_category',
     ];
 
+    protected $casts = [
+        'age' => 'integer',
+        'height_cm' => 'float',
+        'weight_kg' => 'float',
+        'bmi' => 'float',
+    ];
+
     // ─── Relationships ───────────────────────────────────────
 
     public function user()
